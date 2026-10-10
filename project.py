@@ -20,6 +20,7 @@ def main():
     print("Select a GP:")
     for _, row in schedule.iterrows():
         print(f"{row['RoundNumber']}) {row['EventName']} — {row['Location']}")
+
     while True:
         round_input = input("Select a round number: ")
         try:
@@ -29,13 +30,19 @@ def main():
             print(f"Please enter a valid round between 1 and {max_round}.")
     
     session = load_session(race_year, round_number)
+    valid_codes = session.results['Abbreviation'].tolist()
+    for _, row in session.results.iterrows():
+        print(f"{row['Abbreviation']} {row['FullName']} — {row['TeamName']}")
+
+    while True:
+        driver_input = input("Select a driver you want to see his results: ")
+        try:
+            valid_driver = parse_driver(driver_input, valid_codes)
+            break
+        except ValueError:
+            print("Invalid driver")
+    driver_results = session.results[session.results['Abbreviation'] == valid_driver]
     
-    driver_abbr = 'VER'
-    driver_results = session.results[session.results['Abbreviation'] == driver_abbr]
-    
-    if driver_results.empty:
-        print(f"Driver {driver_abbr} not found in this session.")
-        return
         
     driver_row = driver_results.iloc[0]
     
@@ -43,7 +50,7 @@ def main():
     grid = driver_row['GridPosition']
     points = driver_row['Points']
     status = driver_row['Status']
-    driver_laps = session.laps.pick_drivers(driver_abbr)
+    driver_laps = session.laps.pick_drivers(valid_driver)
     
     
     if driver_laps.empty:
@@ -61,7 +68,7 @@ def main():
             fastest_lap_time = f"{minutes}:{seconds:06.3f}"
     
 
-    print(f"\n--- Results for {driver_abbr} ({session.event['EventName']} {race_year}) ---")
+    print(f"\n--- Results for {driver_row['FullName']} {driver_row['TeamName']} ({session.event['EventName']} {race_year}) ---")
     print(f"Finishing Position : {int(position)}")
     print(f"Starting Grid      : {int(grid)}")
     print(f"Points Scored      : {points:g}")
@@ -80,6 +87,13 @@ def parse_round(text, max_round):
     if round_number < 1 or round_number > max_round:
         raise ValueError
     return round_number
+
+def parse_driver(text, valid_codes):
+    text = text.strip().upper()
+    if text not in valid_codes:
+        raise ValueError
+    return text
+
 
 def load_session(year, round_number):
     session = fastf1.get_session(year, round_number, 'Race')
