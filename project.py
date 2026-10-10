@@ -16,12 +16,19 @@ def main():
             print(f"Please enter a valid year between {MIN_YEAR} and {MAX_YEAR}.")
 
     schedule = fastf1.get_event_schedule(race_year, include_testing=False)
+    max_round = schedule['RoundNumber'].max()
     print("Select a GP:")
-    for race_round, row in schedule.iterrows():
+    for _, row in schedule.iterrows():
         print(f"{row['RoundNumber']}) {row['EventName']} — {row['Location']}")
-    round_input = input("Select a round number: ")
+    while True:
+        round_input = input("Select a round number: ")
+        try:
+            round_number = parse_round(round_input, max_round)
+            break
+        except ValueError:
+            print(f"Please enter a valid round between 1 and {max_round}.")
     
-    session = load_session(race_year, round_number=int(round_input))
+    session = load_session(race_year, round_number)
     
     driver_abbr = 'VER'
     driver_results = session.results[session.results['Abbreviation'] == driver_abbr]
@@ -68,6 +75,11 @@ def parse_year(text):
         raise ValueError
     return year
 
+def parse_round(text, max_round):
+    round_number = int(text)
+    if round_number < 1 or round_number > max_round:
+        raise ValueError
+    return round_number
 
 def load_session(year, round_number):
     session = fastf1.get_session(year, round_number, 'Race')
