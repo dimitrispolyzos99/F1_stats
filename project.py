@@ -4,9 +4,10 @@ import pandas as pd
 MIN_YEAR = 2018
 MAX_YEAR = 2026
 
-fastf1.Cache.enable_cache('cache')
+
 
 def main():
+    fastf1.Cache.enable_cache('cache')
     while True:
         text = input("Enter a year: ")
         try:
@@ -61,11 +62,8 @@ def main():
         if pd.isna(fastest_lap['LapTime']):
             fastest_lap_time = "No valid timed lap (NaT)"
         else:
+            fastest_lap_time = format_lap_time(fastest_lap['LapTime'].total_seconds())
 
-            total_seconds = round(fastest_lap['LapTime'].total_seconds(), 3)
-            minutes = int(total_seconds // 60)
-            seconds = total_seconds % 60
-            fastest_lap_time = f"{minutes}:{seconds:06.3f}"
     
 
     print(f"\n--- Results for {driver_row['FullName']} {driver_row['TeamName']} ({session.event['EventName']} {race_year}) ---")
@@ -75,6 +73,12 @@ def main():
     print(f"Status             : {status}")
     print(f"Fastest Lap Time   : {fastest_lap_time}")
 
+
+def format_lap_time(seconds):
+    seconds = round(seconds, 3)
+    minutes = int(seconds // 60)
+    format_seconds = seconds % 60
+    return f"{minutes}:{format_seconds:06.3f}"
 
 def parse_year(text):
     year = int(text)
