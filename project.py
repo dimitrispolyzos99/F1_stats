@@ -63,8 +63,12 @@ def main():
             fastest_lap_time = "No valid timed lap (NaT)"
         else:
             fastest_lap_time = format_lap_time(fastest_lap['LapTime'].total_seconds())
-
     
+    try:
+        gained = positions_gained(int(grid), int(position))
+        gained_text = f"{gained:+}"
+    except ValueError:
+        gained_text = "Pit lane start"
 
     print(f"\n--- Results for {driver_row['FullName']} {driver_row['TeamName']} ({session.event['EventName']} {race_year}) ---")
     print(f"Finishing Position : {int(position)}")
@@ -72,6 +76,7 @@ def main():
     print(f"Points Scored      : {points:g}")
     print(f"Status             : {status}")
     print(f"Fastest Lap Time   : {fastest_lap_time}")
+    print(f"Positions Gained    : {gained_text}")
 
 
 def format_lap_time(seconds):
@@ -103,6 +108,11 @@ def load_session(year, round_number):
     session = fastf1.get_session(year, round_number, 'Race')
     session.load()
     return session
+
+def positions_gained(grid, finish):
+    if grid == 0:
+        raise ValueError("Grid position 0 is not valid for calculating positions gained (pit lane start).")
+    return grid - finish
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import pytest
-from project import format_lap_time, parse_round, parse_year, parse_driver, MIN_YEAR, MAX_YEAR
+from project import format_lap_time, parse_round, parse_year, parse_driver, MIN_YEAR, MAX_YEAR, positions_gained
 
 
 def test_format_lap_time():
@@ -33,3 +33,10 @@ def test_parse_driver():
     assert parse_driver(" ver ", ["VER", "LEC"]) == "VER"
     with pytest.raises(ValueError):
         parse_driver("XYZ", ["VER", "LEC"])
+
+def test_positions_gained():
+    assert positions_gained(4, 1) == 3
+    assert positions_gained(2, 2) == 0
+    assert positions_gained(2, 5) == -3
+    with pytest.raises(ValueError):
+        positions_gained(0, 15)
