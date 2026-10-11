@@ -45,7 +45,7 @@ def main():
     
         
     driver_row = driver_results.iloc[0]
-    
+
     position = driver_row['Position']
     grid = driver_row['GridPosition']
     points = driver_row['Points']
@@ -72,18 +72,22 @@ def main():
     except ValueError:
         gained_text = "Pit lane start"
 
-    print(f"\n--- Results for {driver_row['FullName']} {driver_row['TeamName']} ({session.event['EventName']} {race_year}) ---")
-    print(f"Finishing Position : {int(position)}")
-    print(f"Starting Grid      : {int(grid)}")
-    print(f"Points Scored      : {points:g}")
-    print(f"Status             : {status}")
-    print(f"Fastest Lap Time   : {fastest_lap_time}")
-    print(f"Positions Gained   : {gained_text}")
+    lines = [
+        f"Finishing Position : {int(position)}",
+        f"Starting Grid      : {int(grid)}",
+        f"Points Scored      : {points:g}",
+        f"Status             : {status}",
+        f"Fastest Lap Time   : {fastest_lap_time}",
+        f"Positions Gained   : {gained_text}"]
+    result_title = (f"Results for {driver_row['FullName']}\n{driver_row['TeamName']}\n({session.event['EventName']} {race_year})")
+    info = "\n".join(lines)
+    board = f"{result_title}\n\n{info}"
+    print(board)
     
     if has_telemetry:
         title = (f"Fastest Lap Telemetry — {session.event['EventName']}\n({driver_row['FullName']} - {driver_row['TeamName']}) {fastest_lap_time}")
         telemetry = fastest_lap.get_telemetry()
-        plot_track(telemetry, title)
+        plot_track(telemetry, title, board)
     else:
         print("No telemetry available to plot.")
 
@@ -118,12 +122,26 @@ def load_session(year, round_number):
     session.load()
     return session
 
-def plot_track(telemetry, title):
-    plt.figure(figsize=(8, 6))
+def plot_track(telemetry, title, info):
+    plt.figure(figsize=(13, 6))
     plt.scatter(telemetry['X'], telemetry['Y'], c=telemetry['Speed'], s=5, cmap='plasma')
     plt.axis('equal')
+    plt.axis('off')
     plt.colorbar(label='Speed (km/h)')
     plt.title(title)
+    plt.subplots_adjust(right=0.7)
+    plt.figtext(
+        0.75, 0.5, info, 
+        family='monospace', 
+        va='center', 
+        bbox=dict(
+            boxstyle='round,pad=0.5', 
+            facecolor='whitesmoke', 
+            edgecolor='lightgray', 
+            linewidth=1.2
+        )
+    )
+    
     plt.show() 
 
 def positions_gained(grid, finish):
