@@ -1,10 +1,9 @@
 import fastf1
 import pandas as pd
+import matplotlib.pyplot as plt
 
 MIN_YEAR = 2018
 MAX_YEAR = 2026
-
-
 
 def main():
     fastf1.Cache.enable_cache('cache')
@@ -56,13 +55,16 @@ def main():
     
     if driver_laps.empty:
         fastest_lap_time = "No laps recorded (DNF)"
+        has_telemetry = False
     else:
         fastest_lap = driver_laps.pick_fastest()
     
         if pd.isna(fastest_lap['LapTime']):
             fastest_lap_time = "No valid timed lap (NaT)"
+            has_telemetry = False
         else:
             fastest_lap_time = format_lap_time(fastest_lap['LapTime'].total_seconds())
+            has_telemetry = True
     
     try:
         gained = positions_gained(int(grid), int(position))
@@ -76,7 +78,14 @@ def main():
     print(f"Points Scored      : {points:g}")
     print(f"Status             : {status}")
     print(f"Fastest Lap Time   : {fastest_lap_time}")
-    print(f"Positions Gained    : {gained_text}")
+    print(f"Positions Gained   : {gained_text}")
+    
+    if has_telemetry:
+        title = (f"Fastest Lap Telemetry — {session.event['EventName']}\n({driver_row['FullName']} - {driver_row['TeamName']}) {fastest_lap_time}")
+        telemetry = fastest_lap.get_telemetry()
+        plot_track(telemetry, title)
+    else:
+        print("No telemetry available to plot.")
 
 
 def format_lap_time(seconds):
@@ -108,6 +117,14 @@ def load_session(year, round_number):
     session = fastf1.get_session(year, round_number, 'Race')
     session.load()
     return session
+
+def plot_track(telemetry, title):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(telemetry['X'], telemetry['Y'], c=telemetry['Speed'], s=5, cmap='plasma')
+    plt.axis('equal')
+    plt.colorbar(label='Speed (km/h)')
+    plt.title(title)
+    plt.show() 
 
 def positions_gained(grid, finish):
     if grid == 0:
